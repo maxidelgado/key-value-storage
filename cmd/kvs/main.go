@@ -52,7 +52,7 @@ func main() {
 	}
 }
 
-func handle(store kvs.TransactionalKVS, cmd, arg1, arg2 string) (result interface{}, err error) {
+func handle(store kvs.KVS, cmd, arg1, arg2 string) (result interface{}, err error) {
 	switch strings.ToUpper(cmd) {
 	case "SET":
 		store.Set(arg1, arg2)

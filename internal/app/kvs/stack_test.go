@@ -18,7 +18,7 @@ func Test_transactionStack_isEmpty(t *testing.T) {
 		},
 		{
 			name: "should not be empty",
-			s:    transactionStack{mapKVS{}},
+			s:    transactionStack{storage{}},
 			want: false,
 		},
 	}
@@ -35,19 +35,19 @@ func Test_transactionStack_peek(t *testing.T) {
 	tests := []struct {
 		name    string
 		s       transactionStack
-		want    MapKVS
+		want    storage
 		wantErr bool
 	}{
 		{
 			name:    "should return latest item in stack",
-			s:       transactionStack{mapKVS{}},
-			want:    mapKVS{},
+			s:       transactionStack{storage{}},
+			want:    storage{},
 			wantErr: false,
 		},
 		{
 			name:    "should return error, no transactions in stack",
 			s:       transactionStack{},
-			want:    nil,
+			want:    storage{},
 			wantErr: true,
 		},
 	}
@@ -70,20 +70,20 @@ func Test_transactionStack_pop(t *testing.T) {
 		name    string
 		s       transactionStack
 		wantLen int
-		want    MapKVS
+		want    storage
 		wantErr bool
 	}{
 		{
 			name:    "should return latest transaction and remove it from the stack",
-			s:       transactionStack{mapKVS{}, mapKVS{}},
+			s:       transactionStack{storage{}, storage{}},
 			wantLen: 1,
-			want:    mapKVS{},
+			want:    storage{},
 			wantErr: false,
 		},
 		{
 			name:    "should return error, no transactions in stack",
 			s:       transactionStack{},
-			want:    nil,
+			want:    storage{},
 			wantLen: 0,
 			wantErr: true,
 		},
@@ -107,7 +107,7 @@ func Test_transactionStack_pop(t *testing.T) {
 
 func Test_transactionStack_push(t *testing.T) {
 	type args struct {
-		storage MapKVS
+		storage storage
 	}
 	var tests = []struct {
 		name    string
@@ -118,7 +118,7 @@ func Test_transactionStack_push(t *testing.T) {
 		{
 			name:    "should push an item to the stack",
 			s:       transactionStack{},
-			args:    args{storage: mapKVS{}},
+			args:    args{storage: storage{}},
 			wantLen: 1,
 		},
 	}

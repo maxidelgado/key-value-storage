@@ -7,7 +7,7 @@ import (
 func Test_transactionalKVS_Commit(t *testing.T) {
 	type fields struct {
 		transactions *transactionStack
-		storage      MapKVS
+		storage      storage
 	}
 	tests := []struct {
 		name    string
@@ -17,16 +17,16 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 		{
 			name: "should commit child to parent transaction",
 			fields: fields{
-				transactions: &transactionStack{mapKVS{}, mapKVS{}},
-				storage:      newMapKVS(),
+				transactions: &transactionStack{storage{}, storage{}},
+				storage:      newStorage(),
 			},
 			wantErr: false,
 		},
 		{
 			name: "should commit parent transaction",
 			fields: fields{
-				transactions: &transactionStack{mapKVS{}},
-				storage:      newMapKVS(),
+				transactions: &transactionStack{storage{}},
+				storage:      newStorage(),
 			},
 			wantErr: false,
 		},
@@ -34,14 +34,14 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 			name: "should return error, no transaction found",
 			fields: fields{
 				transactions: &transactionStack{},
-				storage:      newMapKVS(),
+				storage:      newStorage(),
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := transactionalKVS{
+			k := kvs{
 				transactions: tt.fields.transactions,
 				storage:      tt.fields.storage,
 			}
@@ -55,7 +55,7 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 func Test_transactionalKVS_Set(t *testing.T) {
 	type fields struct {
 		transactions *transactionStack
-		storage      MapKVS
+		storage      storage
 	}
 	type args struct {
 		key   string
@@ -70,7 +70,7 @@ func Test_transactionalKVS_Set(t *testing.T) {
 			name: "should set key to main kvs",
 			fields: fields{
 				transactions: &transactionStack{},
-				storage:      newMapKVS(),
+				storage:      newStorage(),
 			},
 			args: args{
 				key:   "key",
@@ -80,8 +80,8 @@ func Test_transactionalKVS_Set(t *testing.T) {
 		{
 			name: "should set key to current transaction kvs",
 			fields: fields{
-				transactions: &transactionStack{newMapKVS()},
-				storage:      newMapKVS(),
+				transactions: &transactionStack{newStorage()},
+				storage:      newStorage(),
 			},
 			args: args{
 				key:   "key",
@@ -91,7 +91,7 @@ func Test_transactionalKVS_Set(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := transactionalKVS{
+			k := kvs{
 				transactions: tt.fields.transactions,
 				storage:      tt.fields.storage,
 			}

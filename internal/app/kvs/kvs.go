@@ -9,33 +9,29 @@ var (
 	errNoTransaction = errors.New("no transaction")
 )
 
-type TransactionalKVS interface {
-	kvs
+type KVS interface {
+	Set(string, string)
+	Get(string) (string, error)
+	Delete(string) error
+	Count(string) int
 	Begin()
 	Commit() error
 	Rollback() error
 }
 
-type kvs interface {
-	Set(string, string)
-	Get(string) (string, error)
-	Delete(string) error
-	Count(string) int
-}
-
-func New() TransactionalKVS {
-	return transactionalKVS{
+func New() KVS {
+	return kvs{
 		transactions: &transactionStack{},
-		storage:      newMapKVS(),
+		storage:      newStorage(),
 	}
 }
 
-type transactionalKVS struct {
+type kvs struct {
 	transactions *transactionStack
-	storage      MapKVS
+	storage      storage
 }
 
-func (k transactionalKVS) Set(key, value string) {
+func (k kvs) Set(key, value string) {
 	tx, err := k.transactions.peek()
 	if errors.Is(err, errNoTransaction) {
 		k.storage.Set(key, value)
@@ -44,7 +40,7 @@ func (k transactionalKVS) Set(key, value string) {
 	tx.Set(key, value)
 }
 
-func (k transactionalKVS) Get(key string) (string, error) {
+func (k kvs) Get(key string) (string, error) {
 	tx, err := k.transactions.peek()
 	if errors.Is(err, errNoTransaction) {
 		return k.storage.Get(key)
@@ -52,7 +48,7 @@ func (k transactionalKVS) Get(key string) (string, error) {
 	return tx.Get(key)
 }
 
-func (k transactionalKVS) Delete(key string) error {
+func (k kvs) Delete(key string) error {
 	tx, err := k.transactions.peek()
 	if errors.Is(err, errNoTransaction) {
 		return k.storage.Delete(key)
@@ -60,7 +56,7 @@ func (k transactionalKVS) Delete(key string) error {
 	return tx.Delete(key)
 }
 
-func (k transactionalKVS) Count(value string) int {
+func (k kvs) Count(value string) int {
 	tx, err := k.transactions.peek()
 	if errors.Is(err, errNoTransaction) {
 		return k.storage.Count(value)
@@ -68,11 +64,11 @@ func (k transactionalKVS) Count(value string) int {
 	return tx.Count(value)
 }
 
-func (k transactionalKVS) Begin() {
-	k.transactions.push(newMapKVS())
+func (k kvs) Begin() {
+	k.transactions.push(newStorage())
 }
 
-func (k transactionalKVS) Commit() error {
+func (k kvs) Commit() error {
 	currentTx, err := k.transactions.pop()
 	if err != nil {
 		return err
@@ -80,15 +76,15 @@ func (k transactionalKVS) Commit() error {
 
 	parentTx, err := k.transactions.peek()
 	if errors.Is(err, errNoTransaction) {
-		k.storage.ApplyChanges(currentTx.GetMap())
+		k.storage.ApplyChanges(currentTx.GetChanges())
 		return nil
 	}
 
-	parentTx.ApplyChanges(currentTx.GetMap())
+	parentTx.ApplyChanges(currentTx.GetChanges())
 	return nil
 }
 
-func (k transactionalKVS) Rollback() error {
+func (k kvs) Rollback() error {
 	_, err := k.transactions.pop()
 	return err
 }

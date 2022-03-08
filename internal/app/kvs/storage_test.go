@@ -11,49 +11,49 @@ func Test_mapKVS_ApplyChanges(t *testing.T) {
 		count   map[string]int
 	}
 	type args struct {
-		m MapStorage
+		m map[string]string
 	}
 	tests := []struct {
 		name        string
 		fields      fields
 		args        args
-		wantStorage MapStorage
+		wantStorage map[string]string
 		wantCount   map[string]int
 	}{
 		{
 			name: "should replace b key with a new value",
 			fields: fields{
-				storage: MapStorage{"a": "1", "b": "2"},
+				storage: map[string]string{"a": "1", "b": "2"},
 				count:   map[string]int{"1": 1, "2": 1},
 			},
 			args: args{
-				m: MapStorage{"b": "3"},
+				m: map[string]string{"b": "3"},
 			},
-			wantStorage: MapStorage{"a": "1", "b": "3"},
+			wantStorage: map[string]string{"a": "1", "b": "3"},
 			wantCount:   map[string]int{"1": 1, "2": 0, "3": 1},
 		},
 		{
 			name: "should add c key and its value",
 			fields: fields{
-				storage: MapStorage{"a": "1", "b": "2"},
+				storage: map[string]string{"a": "1", "b": "2"},
 				count:   map[string]int{"1": 1, "2": 1},
 			},
 			args: args{
-				m: MapStorage{"c": "3"},
+				m: map[string]string{"c": "3"},
 			},
-			wantStorage: MapStorage{"a": "1", "b": "2", "c": "3"},
+			wantStorage: map[string]string{"a": "1", "b": "2", "c": "3"},
 			wantCount:   map[string]int{"1": 1, "2": 1, "3": 1},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mapKVS{
-				storage: tt.fields.storage,
-				count:   tt.fields.count,
+			s := storage{
+				memoryMap: tt.fields.storage,
+				count:     tt.fields.count,
 			}
 			s.ApplyChanges(tt.args.m)
-			if !reflect.DeepEqual(s.storage, tt.wantStorage) {
-				t.Errorf("s.storage = %v, want %v", s.storage, tt.wantStorage)
+			if !reflect.DeepEqual(s.memoryMap, tt.wantStorage) {
+				t.Errorf("s.memoryMap = %v, want %v", s.memoryMap, tt.wantStorage)
 			}
 			if !reflect.DeepEqual(s.count, tt.wantCount) {
 				t.Errorf("s.count = %v, want %v", s.count, tt.wantCount)
@@ -91,7 +91,7 @@ func Test_mapKVS_Count(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mapKVS{
+			s := storage{
 				count: tt.count,
 			}
 			if got := s.Count(tt.args.value); got != tt.want {
@@ -107,7 +107,7 @@ func Test_mapKVS_Get(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage MapStorage
+		storage map[string]string
 		args    args
 		want    string
 		wantErr bool
@@ -117,7 +117,7 @@ func Test_mapKVS_Get(t *testing.T) {
 			args: args{
 				key: "key",
 			},
-			storage: MapStorage{"key": "value"},
+			storage: map[string]string{"key": "value"},
 			want:    "value",
 			wantErr: false,
 		},
@@ -126,15 +126,15 @@ func Test_mapKVS_Get(t *testing.T) {
 			args: args{
 				key: "not-existing-key",
 			},
-			storage: MapStorage{"key": "value"},
+			storage: map[string]string{"key": "value"},
 			want:    "",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mapKVS{
-				storage: tt.storage,
+			s := storage{
+				memoryMap: tt.storage,
 			}
 			got, err := s.Get(tt.args.key)
 			if (err != nil) != tt.wantErr {
