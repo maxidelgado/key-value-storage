@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_mapKVS_ApplyChanges(t *testing.T) {
+func Test_transaction_applyChanges(t *testing.T) {
 	type fields struct {
 		storage map[string]string
 		count   map[string]int
@@ -47,22 +47,22 @@ func Test_mapKVS_ApplyChanges(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := storage{
-				memoryMap: tt.fields.storage,
-				count:     tt.fields.count,
+			s := transaction{
+				storage:  tt.fields.storage,
+				countMap: tt.fields.count,
 			}
-			s.ApplyChanges(tt.args.m)
-			if !reflect.DeepEqual(s.memoryMap, tt.wantStorage) {
-				t.Errorf("s.memoryMap = %v, want %v", s.memoryMap, tt.wantStorage)
+			s.applyChanges(tt.args.m)
+			if !reflect.DeepEqual(s.storage, tt.wantStorage) {
+				t.Errorf("s.storage = %v, want %v", s.storage, tt.wantStorage)
 			}
-			if !reflect.DeepEqual(s.count, tt.wantCount) {
-				t.Errorf("s.count = %v, want %v", s.count, tt.wantCount)
+			if !reflect.DeepEqual(s.countMap, tt.wantCount) {
+				t.Errorf("s.countMap = %v, want %v", s.countMap, tt.wantCount)
 			}
 		})
 	}
 }
 
-func Test_mapKVS_Count(t *testing.T) {
+func Test_transaction_count(t *testing.T) {
 	type args struct {
 		value string
 	}
@@ -91,17 +91,17 @@ func Test_mapKVS_Count(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := storage{
-				count: tt.count,
+			s := transaction{
+				countMap: tt.count,
 			}
-			if got := s.Count(tt.args.value); got != tt.want {
-				t.Errorf("Count() = %v, want %v", got, tt.want)
+			if got := s.count(tt.args.value); got != tt.want {
+				t.Errorf("count() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_mapKVS_Get(t *testing.T) {
+func Test_transaction_get(t *testing.T) {
 	type args struct {
 		key string
 	}
@@ -133,16 +133,16 @@ func Test_mapKVS_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := storage{
-				memoryMap: tt.storage,
+			s := transaction{
+				storage: tt.storage,
 			}
-			got, err := s.Get(tt.args.key)
+			got, err := s.get(tt.args.key)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Get() got = %v, want %v", got, tt.want)
+				t.Errorf("get() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

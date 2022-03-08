@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-func Test_transactionalKVS_Commit(t *testing.T) {
+func Test_KVS_Commit(t *testing.T) {
 	type fields struct {
-		transactions *transactionStack
-		storage      storage
+		stack  *stack
+		mainTx transaction
 	}
 	tests := []struct {
 		name    string
@@ -17,24 +17,24 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 		{
 			name: "should commit child to parent transaction",
 			fields: fields{
-				transactions: &transactionStack{storage{}, storage{}},
-				storage:      newStorage(),
+				stack:  &stack{transaction{}, transaction{}},
+				mainTx: newTransaction(),
 			},
 			wantErr: false,
 		},
 		{
 			name: "should commit parent transaction",
 			fields: fields{
-				transactions: &transactionStack{storage{}},
-				storage:      newStorage(),
+				stack:  &stack{transaction{}},
+				mainTx: newTransaction(),
 			},
 			wantErr: false,
 		},
 		{
 			name: "should return error, no transaction found",
 			fields: fields{
-				transactions: &transactionStack{},
-				storage:      newStorage(),
+				stack:  &stack{},
+				mainTx: newTransaction(),
 			},
 			wantErr: true,
 		},
@@ -42,8 +42,8 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k := kvs{
-				transactions: tt.fields.transactions,
-				storage:      tt.fields.storage,
+				stack:  tt.fields.stack,
+				mainTx: tt.fields.mainTx,
 			}
 			if err := k.Commit(); (err != nil) != tt.wantErr {
 				t.Errorf("Commit() error = %v, wantErr %v", err, tt.wantErr)
@@ -52,10 +52,10 @@ func Test_transactionalKVS_Commit(t *testing.T) {
 	}
 }
 
-func Test_transactionalKVS_Set(t *testing.T) {
+func Test_KVS_Set(t *testing.T) {
 	type fields struct {
-		transactions *transactionStack
-		storage      storage
+		stack  *stack
+		mainTx transaction
 	}
 	type args struct {
 		key   string
@@ -67,10 +67,10 @@ func Test_transactionalKVS_Set(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "should set key to main kvs",
+			name: "should set key/value pair to kvs",
 			fields: fields{
-				transactions: &transactionStack{},
-				storage:      newStorage(),
+				stack:  &stack{},
+				mainTx: newTransaction(),
 			},
 			args: args{
 				key:   "key",
@@ -78,10 +78,10 @@ func Test_transactionalKVS_Set(t *testing.T) {
 			},
 		},
 		{
-			name: "should set key to current transaction kvs",
+			name: "should set key to a transaction in the stack",
 			fields: fields{
-				transactions: &transactionStack{newStorage()},
-				storage:      newStorage(),
+				stack:  &stack{newTransaction()},
+				mainTx: newTransaction(),
 			},
 			args: args{
 				key:   "key",
@@ -92,8 +92,8 @@ func Test_transactionalKVS_Set(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k := kvs{
-				transactions: tt.fields.transactions,
-				storage:      tt.fields.storage,
+				stack:  tt.fields.stack,
+				mainTx: tt.fields.mainTx,
 			}
 			k.Set(tt.args.key, tt.args.value)
 		})

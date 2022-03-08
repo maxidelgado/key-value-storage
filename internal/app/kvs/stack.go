@@ -1,25 +1,30 @@
 package kvs
 
-type transactionStack []storage
+// stack is an ordered, linked collection of transactions.
+type stack []transaction
 
-func (s *transactionStack) isEmpty() bool {
+// isEmpty return true if the stack is empty.
+func (s *stack) isEmpty() bool {
 	return len(*s) == 0
 }
 
-func (s *transactionStack) push(storage storage) {
+// push a tx to the end of the stack.
+func (s *stack) push(storage transaction) {
 	*s = append(*s, storage)
 }
 
-func (s *transactionStack) peek() (storage, error) {
+// peek returns the latest tx in the stack. If any tx wasn't found, return an error.
+func (s *stack) peek() (transaction, error) {
 	if s.isEmpty() {
-		return storage{}, errNoTransaction
+		return transaction{}, errNoTransaction
 	}
 	return (*s)[len(*s)-1], nil
 }
 
-func (s *transactionStack) pop() (storage, error) {
+// pop returns the latest tx in the stack and deletes it. If any tx wasn't found, return an error.
+func (s *stack) pop() (transaction, error) {
 	if s.isEmpty() {
-		return storage{}, errNoTransaction
+		return transaction{}, errNoTransaction
 	}
 	latest := (*s)[len(*s)-1]
 	*s = (*s)[:len(*s)-1]
