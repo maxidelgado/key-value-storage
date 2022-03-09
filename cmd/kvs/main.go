@@ -14,18 +14,9 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	store := kvs.New()
 	for {
-		var args [3]string
 		fmt.Print("\n> ")
-		rawInput, _ := reader.ReadString('\n')
-		inputs := strings.Fields(rawInput)
-		for i, input := range inputs {
-			if i == 2 {
-				break
-			}
-			args[i] = input
-		}
-
-		result, err := handle(store, args[0], args[1], args[2])
+		input, _ := reader.ReadString('\n')
+		result, err := handle(store, input)
 		if err != nil {
 			printMsg("ERROR: " + err.Error())
 		} else if result != nil {
@@ -34,7 +25,20 @@ func main() {
 	}
 }
 
-func handle(store kvs.KVS, cmd, arg1, arg2 string) (result interface{}, err error) {
+func parseInput(rawInput string) (string, string, string) {
+	var args [3]string
+	inputs := strings.Fields(rawInput)
+	for i, input := range inputs {
+		if i == 3 {
+			break
+		}
+		args[i] = input
+	}
+	return args[0], args[1], args[2]
+}
+
+func handle(store kvs.KVS, input string) (result interface{}, err error) {
+	cmd, arg1, arg2 := parseInput(input)
 	switch strings.ToUpper(cmd) {
 	case "SET":
 		store.Set(arg1, arg2)
